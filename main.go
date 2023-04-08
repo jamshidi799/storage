@@ -5,6 +5,7 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"log"
+	"storage/record"
 	"storage/user"
 )
 
@@ -29,6 +30,11 @@ func Run() error {
 	uRepo := user.NewPostgresUserRepository(postgresDB)
 	uService := user.NewUserService(uRepo)
 	user.NewUserController(uGroup, uService)
+
+	rGroup := api.Group("record")
+	rRepo := record.NewPostgresRecordRepository(postgresDB)
+	rService := record.NewRecordService(rRepo)
+	record.NewRecordController(rGroup, rService)
 
 	return r.Run()
 }
