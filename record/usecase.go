@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"storage/domain"
+	"time"
 )
 
 type service struct {
@@ -11,7 +12,10 @@ type service struct {
 }
 
 func NewRecordService(repo domain.RecordRepository) domain.RecordService {
-	return &service{repo: repo}
+	s := service{repo: repo}
+	go s.removeExpiredRecordJob()
+
+	return &s
 }
 
 func (s *service) Set(ctx context.Context, record *domain.Record) error {
@@ -35,12 +39,17 @@ func (s *service) Get(ctx context.Context, key string) (*domain.Record, error) {
 func (s *service) GetAll(ctx context.Context) []*domain.Record {
 	records := s.repo.GetAll(ctx)
 	var notExpiredRecords []*domain.Record
+	var expiredKeys []string
 	for _, record := range records {
 		if record.IsExpired() {
-			go s.repo.Delete(context.Background(), record.Key)
+			expiredKeys = append(expiredKeys, record.Key)
 		} else {
 			notExpiredRecords = append(notExpiredRecords, record)
 		}
+	}
+
+	if len(expiredKeys) > 0 {
+		go s.repo.Delete(context.Background(), expiredKeys...)
 	}
 
 	return notExpiredRecords
@@ -58,4 +67,18 @@ func (s *service) SetTtl(ctx context.Context, record *domain.Record) (*domain.Re
 	}
 
 	return r, nil
+}
+
+func (s *service) removeExpiredRecordJob() {
+	for range time.Tick(10 * time.Minute) {
+		records := s.repo.GetAll(context.Background())
+		var expiredKeys []string
+		for _, record := range records {
+			if record.IsExpired() {
+				expiredKeys = append(expiredKeys, record.Key)
+			}
+		}
+
+		s.repo.Delete(context.Background(), expiredKeys...)
+	}
 }

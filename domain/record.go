@@ -22,7 +22,7 @@ type RecordRepository interface {
 	Set(ctx context.Context, record *Record) error
 	Get(ctx context.Context, key string) (*Record, error)
 	GetAll(ctx context.Context) []*Record
-	Delete(ctx context.Context, key string)
+	Delete(ctx context.Context, keys ...string)
 }
 
 func (r *Record) IsExpired() bool {

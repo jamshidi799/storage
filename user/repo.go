@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"gorm.io/gorm"
+	"log"
 	"storage/domain"
 )
 
@@ -17,7 +18,9 @@ type postgresRepo struct {
 }
 
 func NewPostgresUserRepository(db *gorm.DB) domain.UserRepository {
-	_ = db.AutoMigrate(user{})
+	if err := db.AutoMigrate(user{}); err != nil {
+		log.Println(err)
+	}
 
 	return &postgresRepo{db: db}
 }

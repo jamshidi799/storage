@@ -3,6 +3,7 @@ package record
 import (
 	"context"
 	"gorm.io/gorm"
+	"log"
 	"storage/domain"
 	"time"
 )
@@ -18,7 +19,9 @@ type postgresRepo struct {
 }
 
 func NewPostgresRecordRepository(db *gorm.DB) domain.RecordRepository {
-	_ = db.AutoMigrate(record{})
+	if err := db.AutoMigrate(record{}); err != nil {
+		log.Println(err)
+	}
 
 	return &postgresRepo{db: db}
 }
@@ -44,8 +47,8 @@ func (p *postgresRepo) GetAll(ctx context.Context) []*domain.Record {
 	return records
 }
 
-func (p *postgresRepo) Delete(ctx context.Context, key string) {
-	p.db.WithContext(ctx).Delete(record{}, key)
+func (p *postgresRepo) Delete(ctx context.Context, keys ...string) {
+	p.db.WithContext(ctx).Delete(record{}, keys)
 }
 
 func convertToModel(r *domain.Record) *record {
