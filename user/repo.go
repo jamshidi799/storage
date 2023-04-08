@@ -6,7 +6,7 @@ import (
 	"storage/domain"
 )
 
-type userModel struct {
+type user struct {
 	ID       int
 	Email    string `gorm:"unique, index"`
 	Password string
@@ -17,6 +17,8 @@ type postgresRepo struct {
 }
 
 func NewPostgresUserRepository(db *gorm.DB) domain.UserRepository {
+	_ = db.AutoMigrate(user{})
+
 	return &postgresRepo{db: db}
 }
 
@@ -26,20 +28,20 @@ func (p *postgresRepo) Create(ctx context.Context, user *domain.User) error {
 }
 
 func (p *postgresRepo) GetByEmail(ctx context.Context, email string) (*domain.User, error) {
-	var u userModel
+	var u user
 	err := p.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
 	return u.toUser(), err
 }
 
-func convertToModel(u *domain.User) *userModel {
-	return &userModel{
+func convertToModel(u *domain.User) *user {
+	return &user{
 		ID:       u.Id,
 		Email:    u.Email,
 		Password: u.Password,
 	}
 }
 
-func (u *userModel) toUser() *domain.User {
+func (u *user) toUser() *domain.User {
 	return &domain.User{
 		Id:       u.ID,
 		Email:    u.Email,

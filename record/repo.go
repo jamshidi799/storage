@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-type recordModel struct {
+type record struct {
 	Key      string `gorm:"primaryKey"`
 	Value    string
 	ExpireAt time.Time `gorm:"index"`
@@ -18,6 +18,8 @@ type postgresRepo struct {
 }
 
 func NewPostgresRecordRepository(db *gorm.DB) domain.RecordRepository {
+	_ = db.AutoMigrate(record{})
+
 	return &postgresRepo{db: db}
 }
 
@@ -26,13 +28,13 @@ func (p *postgresRepo) Set(ctx context.Context, record *domain.Record) error {
 }
 
 func (p *postgresRepo) Get(ctx context.Context, key string) (*domain.Record, error) {
-	var r recordModel
+	var r record
 	err := p.db.WithContext(ctx).Where("key = ?", key).First(&r).Error
 	return r.toRecord(), err
 }
 
 func (p *postgresRepo) GetAll(ctx context.Context) []*domain.Record {
-	var rows []recordModel
+	var rows []record
 	p.db.WithContext(ctx).Find(&rows)
 
 	var records []*domain.Record
@@ -46,15 +48,15 @@ func (p *postgresRepo) Delete(ctx context.Context, key string) {
 	p.db.WithContext(ctx).Delete(key)
 }
 
-func convertToModel(r *domain.Record) *recordModel {
-	return &recordModel{
+func convertToModel(r *domain.Record) *record {
+	return &record{
 		Key:      r.Key,
 		Value:    r.Value,
 		ExpireAt: time.Now().Add(r.Ttl),
 	}
 }
 
-func (r *recordModel) toRecord() *domain.Record {
+func (r *record) toRecord() *domain.Record {
 	return &domain.Record{
 		Key:   r.Key,
 		Value: r.Value,
