@@ -1,6 +1,7 @@
 package record
 
 import (
+	"errors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"storage/domain"
@@ -14,21 +15,21 @@ type handler struct {
 func NewRecordController(rg *gin.RouterGroup, rs domain.RecordService) {
 	h := &handler{service: rs}
 
-	rg.POST("/", h.set)
-	rg.GET("/", h.getAll)
-	rg.GET("/:key", h.get)
-	rg.POST("/ttl", h.setTtl)
+	rg.POST("", h.set)
+	rg.GET("", h.getAll)
+	rg.GET(":key", h.get)
+	rg.POST("ttl", h.setTtl)
 }
 
 func (h *handler) set(c *gin.Context) {
 	var req setRecordRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if err := h.service.Set(c.Request.Context(), req.toRecord()); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -47,10 +48,14 @@ func (h *handler) getAll(c *gin.Context) {
 }
 
 func (h *handler) get(c *gin.Context) {
-	key := c.GetString("key")
+	key := c.Param("key")
+	if key == "" {
+		c.JSON(http.StatusBadRequest, errors.New("key slug not found"))
+		return
+	}
 	record, err := h.service.Get(c.Request.Context(), key)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -60,13 +65,13 @@ func (h *handler) get(c *gin.Context) {
 func (h *handler) setTtl(c *gin.Context) {
 	var req setRecordTtlRequest
 	if err := c.BindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 
 	record, err := h.service.SetTtl(c.Request.Context(), req.toRecord())
 	if err != nil {
-		c.JSON(http.StatusBadRequest, err)
+		c.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
 

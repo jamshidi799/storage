@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 	"log"
 	"storage/record"
 	"storage/user"
@@ -22,6 +23,7 @@ func Run() error {
 	}
 
 	r := gin.Default()
+	// todo: set gin mode
 
 	basePath := "api"
 	api := r.Group(basePath)
@@ -41,5 +43,8 @@ func Run() error {
 
 func initPostgresDB() (*gorm.DB, error) {
 	dsn := "host=localhost user=postgres password=postgres dbname=storage port=5432 sslmode=disable"
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	return gorm.Open(postgres.Open(dsn), &gorm.Config{
+		// todo: enable verbose mode in development environment
+		Logger: logger.Default.LogMode(logger.Info),
+	})
 }

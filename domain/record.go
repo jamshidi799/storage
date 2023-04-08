@@ -26,5 +26,5 @@ type RecordRepository interface {
 }
 
 func (r *Record) IsExpired() bool {
-	return r.Ttl <= 0
+	return r.Ttl < 0
 }
