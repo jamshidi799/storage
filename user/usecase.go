@@ -18,8 +18,8 @@ func NewUserService(repo domain.UserRepository, tg domain.TokenGenerator) domain
 	}
 }
 
-func (s *service) Register(ctx context.Context, req *domain.RegisterRequest) (*domain.RegisterResponse, error) {
-	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+func (s *service) Register(ctx context.Context, u *domain.User) (*domain.User, error) {
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
@@ -27,7 +27,7 @@ func (s *service) Register(ctx context.Context, req *domain.RegisterRequest) (*d
 	password := string(hashedPass)
 
 	user := domain.User{
-		Email:    req.Email,
+		Email:    u.Email,
 		Password: password,
 	}
 
@@ -35,28 +35,25 @@ func (s *service) Register(ctx context.Context, req *domain.RegisterRequest) (*d
 		return nil, err
 	}
 
-	return &domain.RegisterResponse{
-		Id:    user.Id,
-		Email: user.Email,
-	}, nil
+	return &user, nil
 }
 
-func (s *service) Login(ctx context.Context, req *domain.LoginRequest) (*domain.LoginResponse, error) {
-	user, err := s.repo.GetByEmail(ctx, req.Email)
+func (s *service) Login(ctx context.Context, u *domain.User) (string, error) {
+	user, err := s.repo.GetByEmail(ctx, u.Email)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
-		return nil, err
+	if err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password)); err != nil {
+		return "", err
 	}
 
 	token, err := s.tokenGenerator.Generate(user.Id)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &domain.LoginResponse{Token: token}, nil
+	return token, nil
 }
 
 func (s *service) VerifyToken(token string) bool {

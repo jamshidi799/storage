@@ -9,8 +9,8 @@ type User struct {
 }
 
 type UserService interface {
-	Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error)
-	Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error)
+	Register(ctx context.Context, req *User) (*User, error)
+	Login(ctx context.Context, req *User) (string, error)
 	VerifyToken(token string) bool
 }
 
@@ -22,23 +22,4 @@ type UserRepository interface {
 type TokenGenerator interface {
 	Generate(id int) (string, error)
 	Verify(token string) bool
-}
-
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
-type RegisterResponse struct {
-	Id    int    `json:"id"`
-	Email string `json:"email"`
-}
-
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
-type LoginResponse struct {
-	Token string `json:"token"`
 }
