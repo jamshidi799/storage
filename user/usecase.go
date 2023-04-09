@@ -2,22 +2,33 @@ package user
 
 import (
 	"context"
+	"golang.org/x/crypto/bcrypt"
 	"storage/domain"
 )
 
 type service struct {
 	repo           domain.UserRepository
-	tokenGenerator tokenGenerator
+	tokenGenerator domain.TokenGenerator
 }
 
-func NewUserService(repo domain.UserRepository) domain.UserService {
-	return &service{repo: repo}
+func NewUserService(repo domain.UserRepository, tg domain.TokenGenerator) domain.UserService {
+	return &service{
+		repo:           repo,
+		tokenGenerator: tg,
+	}
 }
 
 func (s *service) Register(ctx context.Context, req *domain.RegisterRequest) (*domain.RegisterResponse, error) {
+	hashedPass, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	password := string(hashedPass)
+
 	user := domain.User{
 		Email:    req.Email,
-		Password: hashPassword(req.Password),
+		Password: password,
 	}
 
 	if err := s.repo.Create(ctx, &user); err != nil {
@@ -36,18 +47,18 @@ func (s *service) Login(ctx context.Context, req *domain.LoginRequest) (*domain.
 		return nil, err
 	}
 
-	if user.Password != hashPassword(req.Password) {
-		return nil, domain.BadRequestError("password is wrong")
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(req.Password)); err != nil {
+		return nil, err
 	}
 
-	token := s.tokenGenerator.generate(user.Id)
+	token, err := s.tokenGenerator.Generate(user.Id)
+	if err != nil {
+		return nil, err
+	}
+
 	return &domain.LoginResponse{Token: token}, nil
 }
 
-type tokenGenerator interface {
-	generate(id int) string
-}
-
-func hashPassword(pass string) string {
-	return pass
+func (s *service) VerifyToken(token string) bool {
+	return s.tokenGenerator.Verify(token)
 }

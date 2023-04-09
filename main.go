@@ -30,10 +30,12 @@ func Run() error {
 
 	uGroup := api.Group("user")
 	uRepo := user.NewPostgresUserRepository(postgresDB)
-	uService := user.NewUserService(uRepo)
-	user.NewUserController(uGroup, uService)
+	jwtTokenGenerator := user.NewJwtTokenGenerator("secret")
+	uService := user.NewUserService(uRepo, jwtTokenGenerator)
+	uHandler := user.NewUserController(uGroup, uService)
 
 	rGroup := api.Group("record")
+	rGroup.Use(uHandler.JwtAuthMiddleware())
 	rRepo := record.NewPostgresRecordRepository(postgresDB)
 	rService := record.NewRecordService(rRepo)
 	record.NewRecordController(rGroup, rService)

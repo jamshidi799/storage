@@ -11,11 +11,17 @@ type User struct {
 type UserService interface {
 	Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error)
 	Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error)
+	VerifyToken(token string) bool
 }
 
 type UserRepository interface {
 	Create(ctx context.Context, user *User) error
 	GetByEmail(ctx context.Context, email string) (*User, error)
+}
+
+type TokenGenerator interface {
+	Generate(id int) (string, error)
+	Verify(token string) bool
 }
 
 type RegisterRequest struct {
