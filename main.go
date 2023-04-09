@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"os"
+	"storage/docs"
 	"storage/record"
 	"storage/user"
 	"time"
@@ -34,7 +37,10 @@ func Run() error {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	basePath := "api"
+	basePath := "/api"
+	docs.SwaggerInfo.BasePath = basePath
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
+
 	api := r.Group(basePath)
 
 	uGroup := api.Group("user")

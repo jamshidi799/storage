@@ -20,6 +20,14 @@ func NewUserController(rg *gin.RouterGroup, us domain.UserService) *controller {
 	return handler
 }
 
+// @Summary Add a new user
+// @Accept  json
+// @Produce  json
+// @Param   req body registerRequest true "registerRequest"
+// @Success 200 {object} registerResponse
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /user/register [post]
 func (c *controller) register(ctx *gin.Context) {
 	var req registerRequest
 	if err := ctx.BindJSON(&req); err != nil {
@@ -39,6 +47,14 @@ func (c *controller) register(ctx *gin.Context) {
 	})
 }
 
+// @Summary login handler
+// @Accept  json
+// @Produce  json
+// @Param   req body loginRequest true "loginRequest"
+// @Success 200 {object} loginResponse
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /user/login [post]
 func (c *controller) login(ctx *gin.Context) {
 	var req loginRequest
 	if err := ctx.BindJSON(&req); err != nil {

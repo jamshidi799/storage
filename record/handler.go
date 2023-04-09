@@ -21,6 +21,14 @@ func NewRecordController(rg *gin.RouterGroup, rs domain.RecordService) {
 	rg.POST("ttl", h.setTtl)
 }
 
+// @Summary set a record
+// @Accept  json
+// @Produce  json
+// @Param   req body setRecordRequest true "setRecordRequest"
+// @Success 200
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /record [post]
 func (h *handler) set(c *gin.Context) {
 	var req setRecordRequest
 	if err := c.BindJSON(&req); err != nil {
@@ -36,6 +44,13 @@ func (h *handler) set(c *gin.Context) {
 	c.Status(http.StatusOK)
 }
 
+// @Summary get record list
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} []response
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /record [get]
 func (h *handler) getAll(c *gin.Context) {
 	records := h.service.GetAll(c.Request.Context())
 
@@ -47,6 +62,13 @@ func (h *handler) getAll(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// @Summary get a record by key
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} response
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /record/{key} [get]
 func (h *handler) get(c *gin.Context) {
 	key := c.Param("key")
 	if key == "" {
@@ -62,6 +84,14 @@ func (h *handler) get(c *gin.Context) {
 	c.JSON(http.StatusOK, toResponse(record))
 }
 
+// @Summary set record ttl
+// @Accept  json
+// @Produce  json
+// @Param   req body setRecordTtlRequest true "setRecordTtlRequest"
+// @Success 200 {object} response
+// @Failure 400 {string} string
+// @Failure 404 {string} string
+// @Router /record/ttl [post]
 func (h *handler) setTtl(c *gin.Context) {
 	var req setRecordTtlRequest
 	if err := c.BindJSON(&req); err != nil {
@@ -81,7 +111,7 @@ func (h *handler) setTtl(c *gin.Context) {
 type setRecordRequest struct {
 	Key   string        `json:"key" binding:"required"`
 	Value string        `json:"value" binding:"required"`
-	Ttl   time.Duration `json:"ttl"`
+	Ttl   time.Duration `json:"ttl" swaggertype:"integer"`
 }
 
 func (s *setRecordRequest) toRecord() *domain.Record {
@@ -95,7 +125,7 @@ func (s *setRecordRequest) toRecord() *domain.Record {
 type response struct {
 	Key   string        `json:"key"`
 	Value string        `json:"value"`
-	Ttl   time.Duration `json:"ttl,omitempty"`
+	Ttl   time.Duration `json:"ttl,omitempty" swaggertype:"integer"`
 }
 
 func toResponse(r *domain.Record) *response {
@@ -108,7 +138,7 @@ func toResponse(r *domain.Record) *response {
 
 type setRecordTtlRequest struct {
 	Key string        `json:"key" binding:"required"`
-	Ttl time.Duration `json:"ttl" binding:"required"`
+	Ttl time.Duration `json:"ttl" binding:"required" swaggertype:"integer"`
 }
 
 func (s *setRecordTtlRequest) toRecord() *domain.Record {
