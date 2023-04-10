@@ -3,6 +3,7 @@ module storage
 go 1.19
 
 require (
+	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/golang-jwt/jwt/v5 v5.0.0-rc.2
 	github.com/joho/godotenv v1.5.1

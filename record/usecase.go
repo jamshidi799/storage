@@ -2,20 +2,38 @@ package record
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"github.com/allegro/bigcache/v3"
+	"log"
 	"storage/domain"
 	"time"
 )
 
 type service struct {
-	repo domain.RecordRepository
+	repo  domain.RecordRepository
+	cache *bigcache.BigCache
 }
 
 func NewRecordService(repo domain.RecordRepository) domain.RecordService {
-	s := service{repo: repo}
+	cache, _ := bigcache.New(context.Background(), getCacheConfig())
+
+	s := service{
+		repo:  repo,
+		cache: cache,
+	}
+
+	go printCacheStats(cache)
 	go s.removeExpiredRecordJob()
 
 	return &s
+}
+
+func getCacheConfig() bigcache.Config {
+	config := bigcache.DefaultConfig(10 * time.Minute)
+	config.MaxEntriesInWindow = 10000
+	config.HardMaxCacheSize = 32 // MB
+	return config
 }
 
 func (s *service) Set(ctx context.Context, record *domain.Record) error {
@@ -23,6 +41,10 @@ func (s *service) Set(ctx context.Context, record *domain.Record) error {
 }
 
 func (s *service) Get(ctx context.Context, key string) (*domain.Record, error) {
+	if value := s.cacheGet(key); value != nil {
+		return value, nil
+	}
+
 	record, err := s.repo.Get(ctx, key)
 	if err != nil {
 		return nil, err
@@ -32,6 +54,8 @@ func (s *service) Get(ctx context.Context, key string) (*domain.Record, error) {
 		go s.repo.Delete(context.Background(), key)
 		return nil, errors.New("record expired")
 	}
+
+	s.cacheSet(key, record)
 
 	return record, nil
 }
@@ -80,5 +104,32 @@ func (s *service) removeExpiredRecordJob() {
 		}
 
 		s.repo.Delete(context.Background(), expiredKeys...)
+	}
+}
+
+func (s *service) cacheGet(key string) *domain.Record {
+	if value, err := s.cache.Get(key); err == nil {
+		var record domain.Record
+		json.Unmarshal(value, &record)
+
+		if record.IsExpired() {
+			s.cache.Delete(key)
+			return nil
+		}
+
+		return &record
+	}
+
+	return nil
+}
+
+func (s *service) cacheSet(key string, value *domain.Record) {
+	v, _ := json.Marshal(value)
+	s.cache.Set(key, v)
+}
+
+func printCacheStats(cache *bigcache.BigCache) {
+	for range time.Tick(time.Hour) {
+		log.Printf("cache stats: %+v,	length: %d\n", cache.Stats(), cache.Len())
 	}
 }
