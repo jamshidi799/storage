@@ -1,9 +1,11 @@
 # storage
-a key-value storage that developed base on Clean Architecture and TDD.
+a scalable key-value storage that developed base on Clean Architecture and TDD.
 
-use Postgres as persistent storage and Gin as web framework
+* *Gin* as web framework
+* *Postgres* as persistent storage
+* *BigCache* as in-memory cache layer
 
-
+![storage drawio](https://user-images.githubusercontent.com/45311375/230890628-dd533cd1-e176-4df5-98e1-9bc17634b61f.png)
 
 ## How To Run This Project
 
