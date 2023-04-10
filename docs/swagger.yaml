@@ -1,0 +1,215 @@
+definitions:
+  record.response:
+    properties:
+      key:
+        type: string
+      ttl:
+        type: integer
+      value:
+        type: string
+    type: object
+  record.setRecordRequest:
+    properties:
+      key:
+        type: string
+      ttl:
+        type: integer
+      value:
+        type: string
+    required:
+    - key
+    - value
+    type: object
+  record.setRecordTtlRequest:
+    properties:
+      key:
+        type: string
+      ttl:
+        type: integer
+    required:
+    - key
+    - ttl
+    type: object
+  user.loginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.loginResponse:
+    properties:
+      token:
+        type: string
+    type: object
+  user.registerRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  user.registerResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+    type: object
+info:
+  contact: {}
+paths:
+  /record:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/record.response'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: get record list
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: setRecordRequest
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/record.setRecordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: set a record
+  /record/{key}:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/record.response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: get a record by key
+  /record/ttl:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: setRecordTtlRequest
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/record.setRecordTtlRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/record.response'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: set record ttl
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: loginRequest
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/user.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.loginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: login handler
+  /user/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: registerRequest
+        in: body
+        name: req
+        required: true
+        schema:
+          $ref: '#/definitions/user.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.registerResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: Add a new user
+swagger: "2.0"
