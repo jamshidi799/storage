@@ -9,19 +9,17 @@ import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
+	"log"
 	"os"
 	"storage/docs"
 	"storage/record"
 	"storage/user"
-	"time"
 )
 
 func main() {
 	if err := Run(); err != nil {
-		//log.Fatal(err)
+		log.Fatal(err)
 	}
-
-	time.Sleep(time.Hour)
 }
 
 func Run() error {
@@ -81,7 +79,7 @@ func initPostgresDB() (*gorm.DB, error) {
 }
 
 func loadEnv() {
-	env := os.Getenv("POSTGRES_HOST")
+	env := os.Getenv("ENVIRONMENT")
 	println("env: ", env)
 	if env == "" {
 		_ = godotenv.Load()
