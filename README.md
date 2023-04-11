@@ -1,5 +1,5 @@
 # storage
-a scalable key-value storage that developed base on Clean Architecture and TDD.
+a scalable key-value storage that developed base on Clean Architecture and DDD.
 
 * *Gin* as web framework
 * *Postgres* as persistent storage
