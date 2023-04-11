@@ -11,12 +11,12 @@ COPY . .
 
 RUN GOOS=linux go build -o /storage
 
-#FROM gcr.io/distroless/base-debian11
-#
-#WORKDIR /
-#
-#COPY --from=build /storage /storage
+FROM gcr.io/distroless/base-debian11
 
-#USER nonroot:nonroot
+WORKDIR /
+
+COPY --from=build /storage /storage
+
+USER nonroot:nonroot
 
 ENTRYPOINT ["/storage"]
