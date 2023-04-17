@@ -24,7 +24,7 @@ func NewRecordService(repo domain.RecordRepository) domain.RecordService {
 	}
 
 	go printCacheStats(cache)
-	go s.removeExpiredRecordJob()
+	go s.removeExpiredRecordJob(10 * time.Minute)
 
 	return &s
 }
@@ -64,11 +64,11 @@ func (s *service) GetAll(ctx context.Context) []*domain.Record {
 	records := s.repo.GetAll(ctx)
 	var notExpiredRecords []*domain.Record
 	var expiredKeys []string
-	for _, record := range records {
-		if record.IsExpired() {
-			expiredKeys = append(expiredKeys, record.Key)
+	for _, r := range records {
+		if r.IsExpired() {
+			expiredKeys = append(expiredKeys, r.Key)
 		} else {
-			notExpiredRecords = append(notExpiredRecords, record)
+			notExpiredRecords = append(notExpiredRecords, r)
 		}
 	}
 
@@ -93,8 +93,8 @@ func (s *service) SetTtl(ctx context.Context, record *domain.Record) (*domain.Re
 	return r, nil
 }
 
-func (s *service) removeExpiredRecordJob() {
-	for range time.Tick(10 * time.Minute) {
+func (s *service) removeExpiredRecordJob(per time.Duration) {
+	for range time.Tick(per) {
 		records := s.repo.GetAll(context.Background())
 		var expiredKeys []string
 		for _, record := range records {
